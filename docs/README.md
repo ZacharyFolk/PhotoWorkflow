@@ -1,6 +1,6 @@
-# Photo Workflow Documentation
+# Setup and Workflow
 
-Overview of the photo pipeline.
+Overview of my setup.
 
 **Stack:** Ubuntu Server · Darktable (on server, via VNC) · DxO PhotoLab · ImageMagick
 **Photo root:** `/mnt/photos/` · **Samba share:** `PhotoWorkspace` at `\\192.168.x.x\PhotoWorkspace`
@@ -33,23 +33,7 @@ Overview of the photo pipeline.
 
 ---
 
-## The Big Picture
-
-The pipeline in one diagram:
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│  IMPORT          CULL              EDIT             PUBLISH          │
-│                                                                       │
-│  Card → inbox/   archive/  →  working/  →  exports/  →  ready/       │
-│         (raw)    (organized)  (DxO       (DxO          (framed,      │
-│                  triage)      staging)    output)       posted)      │
-│                                                                       │
-│            green label    blue label    purple label                 │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-Color labels in Darktable drive the whole flow:
+Color labels in Darktable are the main organizing attribute:
 
 - **Green** — picked, ready to edit
 - **Blue** — sent to DxO (set automatically by Lua script)

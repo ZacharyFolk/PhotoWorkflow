@@ -1,17 +1,13 @@
 --[[
   send_to_dxo.lua — Send green-labeled images to /mnt/photos/working/
 
-  Adds a "Send to DxO" button to the Lighttable left panel.
+  Adds a "DxO Workflow" panel to the Lighttable left panel.
   - Finds all green-labeled images in the library
   - Copies them to WORKING_DIR
   - Changes their label from green → blue ("queued for DxO")
 
-  Color label values:
-    0 = red
-    1 = yellow
-    2 = green   ← source: ready to send to DxO
-    3 = blue    ← dest:   sent, waiting to be edited
-    4 = purple
+  Note: Darktable 5.x uses per-color boolean fields (image.green, image.blue,
+  etc.) rather than a single integer color_label field.
 
   Install:
     cp send_to_dxo.lua ~/.config/darktable/lua/
@@ -24,10 +20,7 @@
 local dt = require "darktable"
 
 -- ── Configuration ─────────────────────────────────────────────────────────────
-local WORKING_DIR   = "/mnt/photos/working"
-local SOURCE_COLOR  = 2   -- green  = ready to send
-local QUEUED_COLOR  = 3   -- blue   = sent to DxO, not yet edited
-local DONE_COLOR    = 4   -- purple = edited and exported from DxO (set manually)
+local WORKING_DIR = "/mnt/photos/working"
 
 -- ── Helper: ensure working directory exists ───────────────────────────────────
 local function ensure_dir(path)
@@ -43,55 +36,52 @@ end
 
 -- ── Main function ─────────────────────────────────────────────────────────────
 local function send_to_dxo()
-  local ok, err = pcall(function()
-    print("send_to_dxo: clicked")
-    ensure_dir(WORKING_DIR)
-    print("send_to_dxo: working dir ready: " .. WORKING_DIR)
+  print("────────────────────────────────────")
+  print("send_to_dxo: starting")
+  print("send_to_dxo: destination → " .. WORKING_DIR)
+  ensure_dir(WORKING_DIR)
 
-    local sent    = 0
-    local skipped = 0
-    local errors  = 0
-    local checked = 0
+  local sent    = 0
+  local skipped = 0
+  local errors  = 0
+  local checked = 0
 
-    for _, image in ipairs(dt.database) do
-      checked = checked + 1
-      if image.color_label == SOURCE_COLOR then
-        print("send_to_dxo: found green image: " .. image.filename)
+  for _, image in ipairs(dt.database) do
+    checked = checked + 1
+    if image.green then
+      local src  = image.path .. "/" .. image.filename
+      local dest = WORKING_DIR .. "/" .. image.filename
 
-        local src = image.path .. "/" .. image.filename
-        local dest = WORKING_DIR .. "/" .. image.filename
-
-        local f = io.open(dest, "r")
-        if f then
-          f:close()
-          skipped = skipped + 1
+      local f = io.open(dest, "r")
+      if f then
+        f:close()
+        print("  skip (already in working): " .. image.filename)
+        skipped = skipped + 1
+      else
+        print("  copying: " .. image.filename)
+        if copy_file(src, WORKING_DIR) then
+          image.green = false
+          image.blue  = true
+          print("  ✓ sent + relabeled blue: " .. image.filename)
+          sent = sent + 1
         else
-          if copy_file(src, WORKING_DIR) then
-            image.color_label = QUEUED_COLOR
-            sent = sent + 1
-          else
-            dt.print_error("Failed to copy: " .. image.filename)
-            print("send_to_dxo: ERROR copying: " .. src)
-            errors = errors + 1
-          end
+          print("  ✗ ERROR copying: " .. src)
+          dt.print_error("Failed to copy: " .. image.filename)
+          errors = errors + 1
         end
       end
     end
-
-    print("send_to_dxo: checked " .. checked .. " images in library")
-
-    local msg = string.format(
-      "Send to DxO: %d sent, %d skipped (already there), %d errors → %s",
-      sent, skipped, errors, WORKING_DIR
-    )
-    dt.print(msg)
-    print(msg)
-  end)
-
-  if not ok then
-    print("send_to_dxo: LUA ERROR: " .. tostring(err))
-    dt.print("DxO script error — check terminal output")
   end
+
+  print("────────────────────────────────────")
+  print("send_to_dxo: checked " .. checked .. " images in library")
+  local msg = string.format(
+    "Send to DxO: %d sent, %d skipped (already there), %d errors → %s",
+    sent, skipped, errors, WORKING_DIR
+  )
+  print(msg)
+  print("────────────────────────────────────")
+  dt.print(msg)
 end
 
 -- ── Clear working folder ──────────────────────────────────────────────────────

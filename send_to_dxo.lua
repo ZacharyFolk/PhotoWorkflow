@@ -43,47 +43,55 @@ end
 
 -- ── Main function ─────────────────────────────────────────────────────────────
 local function send_to_dxo()
-  ensure_dir(WORKING_DIR)
+  local ok, err = pcall(function()
+    print("send_to_dxo: clicked")
+    ensure_dir(WORKING_DIR)
+    print("send_to_dxo: working dir ready: " .. WORKING_DIR)
 
-  local sent    = 0
-  local skipped = 0
-  local errors  = 0
+    local sent    = 0
+    local skipped = 0
+    local errors  = 0
+    local checked = 0
 
-  -- Iterate every image in the Darktable library
-  for _, image in ipairs(dt.database) do
-    if image.color_label == SOURCE_COLOR then
+    for _, image in ipairs(dt.database) do
+      checked = checked + 1
+      if image.color_label == SOURCE_COLOR then
+        print("send_to_dxo: found green image: " .. image.filename)
 
-      local src = image.path .. "/" .. image.filename
-      local dest = WORKING_DIR .. "/" .. image.filename
+        local src = image.path .. "/" .. image.filename
+        local dest = WORKING_DIR .. "/" .. image.filename
 
-      -- Skip if already in working dir
-      local f = io.open(dest, "r")
-      if f then
-        f:close()
-        skipped = skipped + 1
-      else
-        -- Copy to working dir
-        if copy_file(src, WORKING_DIR) then
-          -- Change label green → blue
-          image.color_label = QUEUED_COLOR
-          sent = sent + 1
+        local f = io.open(dest, "r")
+        if f then
+          f:close()
+          skipped = skipped + 1
         else
-          dt.print_error("Failed to copy: " .. image.filename)
-          errors = errors + 1
+          if copy_file(src, WORKING_DIR) then
+            image.color_label = QUEUED_COLOR
+            sent = sent + 1
+          else
+            dt.print_error("Failed to copy: " .. image.filename)
+            print("send_to_dxo: ERROR copying: " .. src)
+            errors = errors + 1
+          end
         end
       end
     end
+
+    print("send_to_dxo: checked " .. checked .. " images in library")
+
+    local msg = string.format(
+      "Send to DxO: %d sent, %d skipped (already there), %d errors → %s",
+      sent, skipped, errors, WORKING_DIR
+    )
+    dt.print(msg)
+    print(msg)
+  end)
+
+  if not ok then
+    print("send_to_dxo: LUA ERROR: " .. tostring(err))
+    dt.print("DxO script error — check terminal output")
   end
-
-  -- Summary message shown in Darktable's notification bar
-  local msg = string.format(
-    "Send to DxO: %d sent, %d skipped (already there), %d errors → %s",
-    sent, skipped, errors, WORKING_DIR
-  )
-  dt.print(msg)
-
-  -- Also log to terminal
-  print(msg)
 end
 
 -- ── Clear working folder ──────────────────────────────────────────────────────

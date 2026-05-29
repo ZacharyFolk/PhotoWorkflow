@@ -173,6 +173,33 @@ In **Lighttable:**
 2. Navigate to `Z:\inbox\2025-03-18_description\`
 3. Click **Import**
 
+### Adding a batch from archive
+
+After running `photo-triage.py` to move a new batch into `archive/`, tell Darktable about it the same way:
+
+1. Click **Import** → **Add to library**
+2. Navigate to the relevant folder inside `Z:\archive\`
+3. Click **Import** (check **Import recursively** only if you want a whole year/month tree at once — but per-folder keeps filmrolls manageable)
+
+---
+
+### Pre-generating the thumbnail cache
+
+After importing a large batch, Darktable will render thumbnails on demand as you scroll — which is slow. To build them all at once, run this on the server:
+
+```bash
+darktable-generate-cache --max-mip 2
+```
+
+This walks your entire library and pre-generates thumbnails into `~/.cache/darktable/`. The `--max-mip 2` flag covers the small, medium, and main Lighttable display sizes — everything you need for browsing and culling. For a large library it takes a while; run it in `tmux` or leave it overnight. Once done, scrolling through Lighttable is instant. You only pay this cost once per batch.
+
+```bash
+# Run inside tmux so it survives if your SSH session drops
+tmux new -s thumbs
+darktable-generate-cache --max-mip 2
+# Ctrl+B then D to detach and leave it running
+```
+
 ---
 
 ### One-Time Darktable Preferences

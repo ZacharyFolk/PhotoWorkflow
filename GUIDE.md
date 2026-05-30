@@ -288,15 +288,70 @@ Click **⟶ Send green to DxO** in the panel. This:
 1. Open DxO PhotoLab
 2. Point it at `Z:\working\` — all your picks are there in one flat folder
 3. Apply DeepPRIME XD noise reduction, lens corrections, Smart Lighting as needed
-4. Export: **File → Export to disk**
+4. Export using one of the presets below
+
+### DxO Export Presets
+
+Set these up once in **File → Export to disk → Add new option**. Save each as a named preset so you can select it with one click per session.
+
+> **Note on Instagram sizing:** `photoframe.sh` handles all the final canvas sizing and matting for Instagram. DxO just needs to export a generous JPEG — don't try to hit exact Instagram pixel counts here.
+
+---
+
+**Social → photoframe** *(use this for all Instagram variants)*
+
+| Setting | Value |
+|---|---|
+| **Format** | JPEG |
+| **Quality** | 92 |
+| **Destination** | `P:\exports` |
+| **Suffix** | `_DxO` |
+| **Resizing mode** | Longest side |
+| **Size** | 3600px |
+| **ICC profile** | sRGB |
+
+---
+
+**WordPress**
+
+| Setting | Value |
+|---|---|
+| **Format** | JPEG |
+| **Quality** | 85 |
+| **Destination** | `P:\exports` |
+| **Suffix** | `_web` |
+| **Resizing mode** | Longest side |
+| **Size** | 2400px |
+| **ICC profile** | sRGB |
+
+---
+
+**Print**
 
 | Setting | Value |
 |---|---|
 | **Format** | TIFF, 16-bit |
-| **Color space** | Adobe RGB |
-| **Output folder** | `Z:\exports\` |
-| **Filename** | Keep original name or add `_dxo` suffix |
-| **Resize** | OFF — full resolution at this stage |
+| **Destination** | `P:\exports` |
+| **Suffix** | `_print` |
+| **Resizing** | OFF — full resolution |
+| **Resolution** | 300 DPI |
+| **ICC profile** | Adobe RGB |
+
+> **Print size guide:** divide your image's long pixel dimension by 300 to get the maximum print size in inches at full quality. A 6000px long edge = 20" at 300 DPI. Your Nikon files will be fine for most standard print sizes without upscaling.
+
+---
+
+**Archive Master**
+
+| Setting | Value |
+|---|---|
+| **Format** | TIFF, 16-bit |
+| **Destination** | `P:\exports` |
+| **Suffix** | `_master` |
+| **Resizing** | OFF — full resolution |
+| **ICC profile** | Adobe RGB |
+
+---
 
 ### Clear working folder
 
